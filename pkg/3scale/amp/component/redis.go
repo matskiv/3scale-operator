@@ -1,10 +1,7 @@
 package component
 
 import (
-	"fmt"
-
 	appsv1 "github.com/openshift/api/apps/v1"
-	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,93 +10,20 @@ import (
 )
 
 type Redis struct {
-	// TemplateParameters
-	// TemplateObjects
-	// CLI Flags??? should be in this object???
-	options []string
 	Options *RedisOptions
 }
 
-type RedisOptions struct {
-	redisNonRequiredOptions
-	redisRequiredOptions
+func NewRedis(options *RedisOptions) *Redis {
+	return &Redis{Options: options}
 }
 
-type redisRequiredOptions struct {
-	appLabel string
-}
-
-type redisNonRequiredOptions struct {
-}
-
-func NewRedis(options []string) *Redis {
-	redis := &Redis{
-		options: options,
-	}
-	return redis
-}
-
-type RedisOptionsProvider interface {
-	GetRedisOptions() *RedisOptions
-}
-
-type CLIRedisOptionsProvider struct {
-}
-
-func (o *CLIRedisOptionsProvider) GetRedisOptions() (*RedisOptions, error) {
-	rob := RedisOptionsBuilder{}
-	rob.AppLabel("${APP_LABEL}")
-
-	res, err := rob.Build()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create Redis Options - %s", err)
-	}
-	return res, nil
-}
-
-func (redis *Redis) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
-	redis.buildParameters(template)
-	redis.addObjectsIntoTemplate(template)
-}
-
-func (redis *Redis) GetObjects() ([]runtime.RawExtension, error) {
-	objects := redis.buildObjects()
-	return objects, nil
-}
-
-func (redis *Redis) addObjectsIntoTemplate(template *templatev1.Template) {
-	// TODO move this outside this specific method
-	optionsProvider := CLIRedisOptionsProvider{}
-	redisOpts, err := optionsProvider.GetRedisOptions()
-	_ = err
-	redis.Options = redisOpts
-	objects := redis.buildObjects()
-	template.Objects = append(template.Objects, objects...)
-}
-
-func (redis *Redis) buildObjects() []runtime.RawExtension {
+func (redis *Redis) Objects() []runtime.RawExtension {
 	backendRedisObjects := redis.buildBackendRedisObjects()
 	systemRedisObjects := redis.buildSystemRedisObjects()
 
 	objects := backendRedisObjects
 	objects = append(objects, systemRedisObjects...)
 	return objects
-}
-
-func (redis *Redis) PostProcess(template *templatev1.Template, otherComponents []Component) {
-
-}
-
-func (redis *Redis) buildParameters(template *templatev1.Template) {
-	parameters := []templatev1.Parameter{
-		{
-			Name:        "REDIS_IMAGE",
-			Description: "Redis image to use",
-			Required:    true,
-			Value:       "registry.access.redhat.com/rhscl/redis-32-rhel7:3.2",
-		},
-	}
-	template.Parameters = append(template.Parameters, parameters...)
 }
 
 func (redis *Redis) buildBackendRedisObjects() []runtime.RawExtension {

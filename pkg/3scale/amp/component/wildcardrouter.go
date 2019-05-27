@@ -1,11 +1,8 @@
 package component
 
 import (
-	"fmt"
-
 	appsv1 "github.com/openshift/api/apps/v1"
 	routev1 "github.com/openshift/api/route/v1"
-	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,92 +11,14 @@ import (
 )
 
 type WildcardRouter struct {
-	options []string
 	Options *WildcardRouterOptions
 }
 
-type WildcardRouterOptions struct {
-	wildcardRouterNonRequiredOptions
-	wildcardRouterRequiredOptions
+func NewWildcardRouter(options *WildcardRouterOptions) *WildcardRouter {
+	return &WildcardRouter{Options: options}
 }
 
-type wildcardRouterRequiredOptions struct {
-	appLabel       string
-	wildcardDomain string
-	wildcardPolicy string
-}
-
-type wildcardRouterNonRequiredOptions struct {
-}
-
-type WildcardRouterOptionsProvider interface {
-	GetWildcardRouterOptions() *WildcardRouterOptions
-}
-type CLIWildcardRouterOptionsProvider struct {
-}
-
-func (o *CLIWildcardRouterOptionsProvider) GetWildcardRouterOptions() (*WildcardRouterOptions, error) {
-	wrob := WildcardRouterOptionsBuilder{}
-	wrob.AppLabel("${APP_LABEL}")
-	wrob.WildcardDomain("${WILDCARD_DOMAIN}")
-	wrob.WildcardPolicy("${WILDCARD_POLICY}")
-	res, err := wrob.Build()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create Wildcard Router Options - %s", err)
-	}
-	return res, nil
-}
-
-func NewWildcardRouter(options []string) *WildcardRouter {
-	wr := &WildcardRouter{
-		options: options,
-	}
-	return wr
-}
-
-func (wr *WildcardRouter) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
-	// TODO move this outside this specific method
-	optionsProvider := CLIWildcardRouterOptionsProvider{}
-	wrOpts, err := optionsProvider.GetWildcardRouterOptions()
-	_ = err
-	wr.Options = wrOpts
-
-	wr.buildParameters(template)
-	wr.addObjectsIntoTemplate(template)
-}
-
-func (wr *WildcardRouter) addObjectsIntoTemplate(template *templatev1.Template) {
-	objects := wr.buildObjects()
-	template.Objects = append(template.Objects, objects...)
-}
-
-func (wr *WildcardRouter) GetObjects() ([]runtime.RawExtension, error) {
-	objects := wr.buildObjects()
-	return objects, nil
-}
-
-func (wr *WildcardRouter) PostProcess(template *templatev1.Template, otherComponents []Component) {
-
-}
-
-func (wr *WildcardRouter) buildParameters(template *templatev1.Template) {
-	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
-			Name:        "WILDCARD_DOMAIN",
-			Description: "Root domain for the wildcard routes. Eg. example.com will generate 3scale-admin.example.com.",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "WILDCARD_POLICY",
-			Description: "Use \"Subdomain\" to create a wildcard route for apicast wildcard router",
-			Value:       "None",
-			Required:    true,
-		},
-	}
-	template.Parameters = append(template.Parameters, parameters...)
-}
-
-func (wr *WildcardRouter) buildObjects() []runtime.RawExtension {
+func (wr *WildcardRouter) Objects() []runtime.RawExtension {
 	wildcardRouterDeploymentConfig := wr.buildWildcardRouterDeploymentConfig()
 	wildcardRouterService := wr.buildWildcardRouterService()
 	wildcardRouterRoute := wr.buildWildcardRouterRoute()

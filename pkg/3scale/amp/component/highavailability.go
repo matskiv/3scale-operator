@@ -1,8 +1,6 @@
 package component
 
 import (
-	"fmt"
-
 	appsv1 "github.com/openshift/api/apps/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	templatev1 "github.com/openshift/api/template/v1"
@@ -12,24 +10,7 @@ import (
 )
 
 type HighAvailability struct {
-	options []string
 	Options *HighAvailabilityOptions
-}
-
-type HighAvailabilityOptions struct {
-	nonRequiredHighAvailabilityOptions
-	requiredHighAvailabilityOptions
-}
-
-type requiredHighAvailabilityOptions struct {
-	appLabel                    string
-	backendRedisQueuesEndpoint  string
-	backendRedisStorageEndpoint string
-	systemDatabaseURL           string
-	systemRedisURL              string
-}
-
-type nonRequiredHighAvailabilityOptions struct {
 }
 
 const (
@@ -42,86 +23,17 @@ var highlyAvailableExternalDatabases = map[string]bool{
 	"system-mysql":  true,
 }
 
-func NewHighAvailability(options []string) *HighAvailability {
-	ha := &HighAvailability{
-		options: options,
-	}
-	return ha
+func NewHighAvailability(options *HighAvailabilityOptions) *HighAvailability {
+	return &HighAvailability{Options: options}
 }
 
-type HighAvailabilityOptionsProvider interface {
-	GetHighAvailabilityOptions() *HighAvailabilityOptions
-}
-type CLIHighAvailabilityOptionsProvider struct {
-}
-
-func (o *CLIHighAvailabilityOptionsProvider) GetHighAvailabilityOptions() (*HighAvailabilityOptions, error) {
-	hob := HighAvailabilityOptionsBuilder{}
-	hob.AppLabel("${APP_LABEL}")
-	hob.BackendRedisQueuesEndpoint("${BACKEND_REDIS_QUEUES_ENDPOINT}")
-	hob.BackendRedisStorageEndpoint("${BACKEND_REDIS_STORAGE_ENDPOINT}")
-	hob.SystemDatabaseURL("${SYSTEM_DATABASE_URL}")
-	hob.SystemRedisURL("${SYSTEM_REDIS_URL}")
-	res, err := hob.Build()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create High Availability Options - %s", err)
-	}
-	return res, nil
-}
-
-func (ha *HighAvailability) setHAOptions() {
-	// TODO move this outside this specific method
-	optionsProvider := CLIHighAvailabilityOptionsProvider{}
-	haOpts, err := optionsProvider.GetHighAvailabilityOptions()
-	_ = err
-	ha.Options = haOpts
-}
-
-func (ha *HighAvailability) GetObjects() ([]runtime.RawExtension, error) {
-	objects := ha.buildObjects()
-	return objects, nil
-}
-
-func (ha *HighAvailability) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
-	ha.setHAOptions() // TODO move this outside
-	ha.addObjectsIntoTemplate(template)
-
-	ha.buildParameters(template)
-}
-
-func (ha *HighAvailability) addObjectsIntoTemplate(template *templatev1.Template) {
-	objects := ha.buildObjects()
-	template.Objects = append(template.Objects, objects...)
-}
-
-func (ha *HighAvailability) buildObjects() []runtime.RawExtension {
+func (ha *HighAvailability) Objects() []runtime.RawExtension {
 	systemDatabaseSecrets := ha.createSystemDatabaseSecret()
 
 	objects := []runtime.RawExtension{
 		runtime.RawExtension{Object: systemDatabaseSecrets},
 	}
 	return objects
-}
-
-// TODO check how to postprocess independently of templates
-func (ha *HighAvailability) PostProcess(template *templatev1.Template, otherComponents []Component) {
-	res := template.Objects
-	ha.setHAOptions() // TODO move this outside
-	ha.increaseReplicasNumber(res)
-	res = ha.deleteInternalDatabasesObjects(res)
-	ha.updateDatabasesURLS(res)
-	ha.deleteDBRelatedParameters(template)
-
-	template.Objects = res
-}
-
-func (ha *HighAvailability) PostProcessObjects(objects []runtime.RawExtension) []runtime.RawExtension {
-	res := objects
-	ha.increaseReplicasNumber(res)
-	res = ha.deleteInternalDatabasesObjects(res)
-	ha.updateDatabasesURLS(res)
-
-	return res
 }
 
 func (ha *HighAvailability) createSystemDatabaseSecret() *v1.Secret {
@@ -144,7 +56,7 @@ func (ha *HighAvailability) createSystemDatabaseSecret() *v1.Secret {
 	}
 }
 
-func (ha *HighAvailability) increaseReplicasNumber(objects []runtime.RawExtension) {
+func (ha *HighAvailability) IncreaseReplicasNumber(objects []runtime.RawExtension) {
 	// We do not increase the number of replicas in database DeploymentConfigs
 	excludedDeploymentConfigs := map[string]bool{
 		"system-memcache": true,
@@ -163,7 +75,7 @@ func (ha *HighAvailability) increaseReplicasNumber(objects []runtime.RawExtensio
 	}
 }
 
-func (ha *HighAvailability) deleteInternalDatabasesObjects(objects []runtime.RawExtension) []runtime.RawExtension {
+func (ha *HighAvailability) DeleteInternalDatabasesObjects(objects []runtime.RawExtension) []runtime.RawExtension {
 	keepObjects := []runtime.RawExtension{}
 
 	for rawExtIdx, rawExtension := range objects {
@@ -200,7 +112,7 @@ func (ha *HighAvailability) deleteInternalDatabasesObjects(objects []runtime.Raw
 	return keepObjects
 }
 
-func (ha *HighAvailability) deleteDBRelatedParameters(template *templatev1.Template) {
+func (ha *HighAvailability) DeleteDBRelatedParameters(template *templatev1.Template) {
 	keepParams := []templatev1.Parameter{}
 	dbParamsToDelete := map[string]bool{
 		"MYSQL_IMAGE":         true,
@@ -221,7 +133,7 @@ func (ha *HighAvailability) deleteDBRelatedParameters(template *templatev1.Templ
 	template.Parameters = keepParams
 }
 
-func (ha *HighAvailability) updateDatabasesURLS(objects []runtime.RawExtension) {
+func (ha *HighAvailability) UpdateDatabasesURLS(objects []runtime.RawExtension) {
 	for rawExtIdx := range objects {
 		obj := objects[rawExtIdx].Object
 		secret, ok := obj.(*v1.Secret)
@@ -235,30 +147,4 @@ func (ha *HighAvailability) updateDatabasesURLS(objects []runtime.RawExtension) 
 			}
 		}
 	}
-}
-
-func (ha *HighAvailability) buildParameters(template *templatev1.Template) {
-	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
-			Name:        "BACKEND_REDIS_STORAGE_ENDPOINT",
-			Description: "Define the external backend-redis storage endpoint to connect to",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "BACKEND_REDIS_QUEUES_ENDPOINT",
-			Description: "Define the external backend-redis queues endpoint to connect to",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_REDIS_URL",
-			Description: "Define the external system-redis to connect to",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "SYSTEM_DATABASE_URL",
-			Description: "Define the external system-mysql to connect to",
-			Required:    true,
-		},
-	}
-	template.Parameters = append(template.Parameters, parameters...)
 }

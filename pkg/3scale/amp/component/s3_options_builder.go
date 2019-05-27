@@ -2,6 +2,18 @@ package component
 
 import "fmt"
 
+type S3Options struct {
+	// s3NonRequiredOptions
+
+	// s3RequiredOptions
+	awsAccessKeyId       string
+	awsSecretAccessKey   string
+	awsRegion            string
+	awsBucket            string
+	fileUploadStorage    string
+	awsCredentialsSecret string
+}
+
 type S3OptionsBuilder struct {
 	options S3Options
 }

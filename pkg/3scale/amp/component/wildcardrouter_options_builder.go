@@ -2,6 +2,15 @@ package component
 
 import "fmt"
 
+type WildcardRouterOptions struct {
+	// wildcardRouterNonRequiredOptions
+
+	// wildcardRouterRequiredOptions
+	appLabel       string
+	wildcardDomain string
+	wildcardPolicy string
+}
+
 type WildcardRouterOptionsBuilder struct {
 	options WildcardRouterOptions
 }

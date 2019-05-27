@@ -1,10 +1,7 @@
 package component
 
 import (
-	"fmt"
-
 	appsv1 "github.com/openshift/api/apps/v1"
-	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,59 +22,15 @@ type Zync struct {
 	Options *ZyncOptions
 }
 
-type ZyncOptions struct {
-	zyncNonRequiredOptions
-	zyncRequiredOptions
-}
-
-type zyncRequiredOptions struct {
-	appLabel            string
-	authenticationToken string
-	databasePassword    string
-	secretKeyBase       string
-}
-
-type zyncNonRequiredOptions struct {
-	databaseURL *string
-}
-
 type ZyncOptionsProvider interface {
 	GetZyncOptions() *ZyncOptions
 }
-type CLIZyncOptionsProvider struct {
+
+func NewZync(options *ZyncOptions) *Zync {
+	return &Zync{Options: options}
 }
 
-func (o *CLIZyncOptionsProvider) GetZyncOptions() (*ZyncOptions, error) {
-	zob := ZyncOptionsBuilder{}
-	zob.AppLabel("${APP_LABEL}")
-	zob.AuthenticationToken("${ZYNC_AUTHENTICATION_TOKEN}")
-	zob.DatabasePassword("${ZYNC_DATABASE_PASSWORD}")
-	zob.SecretKeyBase("${ZYNC_SECRET_KEY_BASE}")
-	res, err := zob.Build()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create Zync Options - %s", err)
-	}
-	return res, nil
-}
-
-func NewZync(options []string) *Zync {
-	zync := &Zync{
-		options: options,
-	}
-	return zync
-}
-
-func (zync *Zync) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
-	// TODO move this outside this specific method
-	optionsProvider := CLIZyncOptionsProvider{}
-	zyncOpts, err := optionsProvider.GetZyncOptions()
-	_ = err
-	zync.Options = zyncOpts
-	zync.buildParameters(template)
-	zync.addObjectsIntoTemplate(template)
-}
-
-func (zync *Zync) buildObjects() []runtime.RawExtension {
+func (zync *Zync) Objects() []runtime.RawExtension {
 	zyncDeploymentConfig := zync.buildZyncDeploymentConfig()
 	zyncDatabaseDeploymentConfig := zync.buildZyncDatabaseDeploymentConfig()
 	zyncService := zync.buildZyncService()
@@ -92,46 +45,6 @@ func (zync *Zync) buildObjects() []runtime.RawExtension {
 		runtime.RawExtension{Object: zyncSecret},
 	}
 	return objects
-}
-
-func (zync *Zync) PostProcess(template *templatev1.Template, otherComponents []Component) {
-
-}
-
-func (zync *Zync) buildParameters(template *templatev1.Template) {
-	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
-			Name:        "ZYNC_DATABASE_PASSWORD",
-			DisplayName: "PostgreSQL Connection Password",
-			Description: "Password for the PostgreSQL connection user.",
-			Generate:    "expression",
-			From:        "[a-zA-Z0-9]{16}",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:     "ZYNC_SECRET_KEY_BASE",
-			Generate: "expression",
-			From:     "[a-zA-Z0-9]{16}",
-			Required: true,
-		},
-		templatev1.Parameter{
-			Name:     "ZYNC_AUTHENTICATION_TOKEN",
-			Generate: "expression",
-			From:     "[a-zA-Z0-9]{16}",
-			Required: true,
-		},
-	}
-	template.Parameters = append(template.Parameters, parameters...)
-}
-
-func (zync *Zync) GetObjects() ([]runtime.RawExtension, error) {
-	objects := zync.buildObjects()
-	return objects, nil
-}
-
-func (zync *Zync) addObjectsIntoTemplate(template *templatev1.Template) {
-	objects := zync.buildObjects()
-	template.Objects = append(template.Objects, objects...)
 }
 
 func (zync *Zync) buildZyncSecret() *v1.Secret {

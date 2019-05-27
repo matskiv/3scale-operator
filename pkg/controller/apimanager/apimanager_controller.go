@@ -316,8 +316,8 @@ func (r *ReconcileAPIManager) apiManagerObjectsGroup(cr *appsv1alpha1.APIManager
 
 func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1.APIManager, objects []runtime.RawExtension) ([]runtime.RawExtension, error) {
 	if !*cr.Spec.ResourceRequirementsEnabled {
-		e := component.Evaluation{}
-		e.PostProcessObjects(objects)
+		e := component.NewEvaluation()
+		e.RemoveContainersResourceRequestsAndLimits(objects)
 	}
 
 	if product.IsProductizedVersion(cr.Spec.ProductVersion) {
@@ -326,8 +326,8 @@ func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1
 		if err != nil {
 			return nil, err
 		}
-		p := component.Productized{Options: opts}
-		objects = p.PostProcessObjects(objects)
+		p := component.NewProductized(opts)
+		objects = p.UpdateAmpImagesURIs(objects)
 	}
 
 	if cr.Spec.System.FileStorageSpec.S3 != nil {
@@ -336,8 +336,12 @@ func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1
 		if err != nil {
 			return nil, err
 		}
-		s := component.S3{Options: opts}
-		objects = s.PostProcessObjects(objects)
+		s := component.NewS3(opts)
+		res := s.RemoveSystemStoragePVC(objects)
+		s.RemoveSystemStorageReferences(res)
+		s.AddS3PostprocessOptionsToSystemEnvironmentCfgMap(res)
+		s.AddCfgMapElemsToSystemBaseEnv(res)
+		objects = res
 	}
 
 	if cr.Spec.HighAvailability != nil && cr.Spec.HighAvailability.Enabled {
@@ -346,8 +350,12 @@ func (r *ReconcileAPIManager) postProcessAPIManagerObjectsGroup(cr *appsv1alpha1
 		if err != nil {
 			return nil, err
 		}
-		h := component.HighAvailability{Options: opts}
-		objects = h.PostProcessObjects(objects)
+		h := component.NewHighAvailability(opts)
+		res := objects
+		h.IncreaseReplicasNumber(res)
+		res = h.DeleteInternalDatabasesObjects(res)
+		h.UpdateDatabasesURLS(res)
+		objects = res
 	}
 
 	return objects, nil
@@ -360,13 +368,8 @@ func (r *ReconcileAPIManager) createImages(cr *appsv1alpha1.APIManager) ([]runti
 		return nil, err
 	}
 
-	i := component.AmpImages{Options: opts}
-	result, err := i.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	i := component.NewAmpImages(opts)
+	return i.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createRedis(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
@@ -376,13 +379,8 @@ func (r *ReconcileAPIManager) createRedis(cr *appsv1alpha1.APIManager) ([]runtim
 		return nil, err
 	}
 
-	redis := component.Redis{Options: opts}
-	result, err := redis.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	redis := component.NewRedis(opts)
+	return redis.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createBackend(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
@@ -392,13 +390,8 @@ func (r *ReconcileAPIManager) createBackend(cr *appsv1alpha1.APIManager) ([]runt
 		return nil, err
 	}
 
-	b := component.Backend{Options: opts}
-	result, err := b.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	b := component.NewBackend(opts)
+	return b.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createMysql(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
@@ -408,13 +401,8 @@ func (r *ReconcileAPIManager) createMysql(cr *appsv1alpha1.APIManager) ([]runtim
 		return nil, err
 	}
 
-	m := component.Mysql{Options: opts}
-	result, err := m.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	m := component.NewMysql(opts)
+	return m.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createMemcached(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
@@ -424,13 +412,8 @@ func (r *ReconcileAPIManager) createMemcached(cr *appsv1alpha1.APIManager) ([]ru
 		return nil, err
 	}
 
-	i := component.Memcached{Options: opts}
-	result, err := i.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	i := component.NewMemcached(opts)
+	return i.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createSystem(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
@@ -440,13 +423,8 @@ func (r *ReconcileAPIManager) createSystem(cr *appsv1alpha1.APIManager) ([]runti
 		return nil, err
 	}
 
-	i := component.System{Options: opts}
-	result, err := i.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	i := component.NewSystem(opts)
+	return i.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createZync(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
@@ -456,13 +434,8 @@ func (r *ReconcileAPIManager) createZync(cr *appsv1alpha1.APIManager) ([]runtime
 		return nil, err
 	}
 
-	z := component.Zync{Options: opts}
-	result, err := z.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	z := component.NewZync(opts)
+	return z.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createApicast(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
@@ -472,13 +445,8 @@ func (r *ReconcileAPIManager) createApicast(cr *appsv1alpha1.APIManager) ([]runt
 		return nil, err
 	}
 
-	z := component.Apicast{Options: opts}
-	result, err := z.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	z := component.NewApicast(opts)
+	return z.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createWildcardRouter(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
@@ -487,13 +455,8 @@ func (r *ReconcileAPIManager) createWildcardRouter(cr *appsv1alpha1.APIManager) 
 	if err != nil {
 		return nil, err
 	}
-	z := component.WildcardRouter{Options: opts}
-	result, err := z.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	z := component.NewWildcardRouter(opts)
+	return z.Objects(), nil
 }
 
 func (r *ReconcileAPIManager) createS3(cr *appsv1alpha1.APIManager) ([]runtime.RawExtension, error) {
@@ -502,11 +465,6 @@ func (r *ReconcileAPIManager) createS3(cr *appsv1alpha1.APIManager) ([]runtime.R
 	if err != nil {
 		return nil, err
 	}
-	s := component.S3{Options: opts}
-	result, err := s.GetObjects()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	s := component.NewS3(opts)
+	return s.Objects(), nil
 }

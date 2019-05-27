@@ -2,6 +2,17 @@ package component
 
 import "fmt"
 
+type HighAvailabilityOptions struct {
+	// nonRequiredHighAvailabilityOptions
+
+	//requiredHighAvailabilityOptions
+	appLabel                    string
+	backendRedisQueuesEndpoint  string
+	backendRedisStorageEndpoint string
+	systemDatabaseURL           string
+	systemRedisURL              string
+}
+
 type HighAvailabilityOptionsBuilder struct {
 	options HighAvailabilityOptions
 }

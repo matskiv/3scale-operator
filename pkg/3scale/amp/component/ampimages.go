@@ -1,10 +1,7 @@
 package component
 
 import (
-	"fmt"
-
 	imagev1 "github.com/openshift/api/image/v1"
-	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,88 +12,14 @@ const (
 )
 
 type AmpImages struct {
-	options []string
 	Options *AmpImagesOptions
 }
 
-type AmpImagesOptions struct {
-	appLabel             string
-	ampRelease           string
-	apicastImage         string
-	backendImage         string
-	routerImage          string
-	systemImage          string
-	zyncImage            string
-	postgreSQLImage      string
-	backendRedisImage    string
-	systemRedisImage     string
-	systemMemcachedImage string
-	systemMySQLImage     string
-	insecureImportPolicy bool
+func NewAmpImages(options *AmpImagesOptions) *AmpImages {
+	return &AmpImages{Options: options}
 }
 
-func NewAmpImages(options []string) *AmpImages {
-	ampImages := &AmpImages{
-		options: options,
-	}
-	return ampImages
-}
-
-type AmpImagesOptionsProvider interface {
-	GetAmpImagesOptions() *AmpImagesOptions
-}
-type CLIAmpImagesOptionsProvider struct {
-}
-
-func (o *CLIAmpImagesOptionsProvider) GetAmpImagesOptions() (*AmpImagesOptions, error) {
-	aob := AmpImagesOptionsBuilder{}
-	aob.AppLabel("${APP_LABEL}")
-	aob.AMPRelease("${AMP_RELEASE}")
-	aob.ApicastImage("${AMP_APICAST_IMAGE}")
-	aob.BackendImage("${AMP_BACKEND_IMAGE}")
-	aob.RouterImage("${AMP_ROUTER_IMAGE}")
-	aob.SystemImage("${AMP_SYSTEM_IMAGE}")
-	aob.ZyncImage("${AMP_ZYNC_IMAGE}")
-	aob.PostgreSQLImage("${POSTGRESQL_IMAGE}")
-	aob.BackendRedisImage("${REDIS_IMAGE}")
-	aob.SystemRedisImage("${REDIS_IMAGE}")
-	aob.SystemMemcachedImage("${MEMCACHED_IMAGE}")
-	aob.SystemMySQLImage("${MYSQL_IMAGE}")
-
-	aob.InsecureImportPolicy(false)
-
-	res, err := aob.Build()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create AMPImages Options - %s", err)
-	}
-	return res, nil
-}
-
-func (ampImages *AmpImages) AssembleIntoTemplate(template *templatev1.Template, otherComponents []Component) {
-	// TODO move this outside this specific method
-	optionsProvider := CLIAmpImagesOptionsProvider{}
-	ampImagesOpts, err := optionsProvider.GetAmpImagesOptions()
-	_ = err
-	ampImages.Options = ampImagesOpts
-	ampImages.buildParameters(template)
-	ampImages.addObjectsIntoTemplate(template)
-}
-
-func (ampImages *AmpImages) GetObjects() ([]runtime.RawExtension, error) {
-	objects := ampImages.buildObjects()
-	return objects, nil
-}
-
-func (ampImages *AmpImages) addObjectsIntoTemplate(template *templatev1.Template) {
-	objects := ampImages.buildObjects()
-	template.Objects = append(template.Objects, objects...)
-}
-
-func (ampImages *AmpImages) PostProcess(template *templatev1.Template, otherComponents []Component) {
-
-}
-
-func (ampImages *AmpImages) buildObjects() []runtime.RawExtension {
+func (ampImages *AmpImages) Objects() []runtime.RawExtension {
 	backendImageStream := ampImages.buildAmpBackendImageStream()
 	zyncImageStream := ampImages.buildAmpZyncImageStream()
 	apicastImageStream := ampImages.buildApicastImageStream()
@@ -576,59 +499,4 @@ func (ampImages *AmpImages) buildDeploymentsServiceAccount() *v1.ServiceAccount 
 		ImagePullSecrets: []v1.LocalObjectReference{
 			v1.LocalObjectReference{
 				Name: "threescale-registry-auth"}}}
-}
-
-func (ampImages *AmpImages) buildParameters(template *templatev1.Template) {
-	parameters := []templatev1.Parameter{
-		templatev1.Parameter{
-			Name:     "AMP_BACKEND_IMAGE",
-			Required: true,
-			Value:    "quay.io/3scale/apisonator:nightly",
-		},
-		templatev1.Parameter{
-			Name:     "AMP_ZYNC_IMAGE",
-			Value:    "quay.io/3scale/zync:nightly",
-			Required: true,
-		},
-		templatev1.Parameter{
-			Name:     "AMP_APICAST_IMAGE",
-			Value:    "quay.io/3scale/apicast:nightly",
-			Required: true,
-		},
-		templatev1.Parameter{
-			Name:     "AMP_ROUTER_IMAGE",
-			Value:    "quay.io/3scale/wildcard-router:nightly",
-			Required: true,
-		},
-		templatev1.Parameter{
-			Name:     "AMP_SYSTEM_IMAGE",
-			Value:    "quay.io/3scale/porta:nightly",
-			Required: true,
-		},
-		templatev1.Parameter{
-			Name:        "POSTGRESQL_IMAGE",
-			Description: "Postgresql image to use",
-			Value:       "registry.access.redhat.com/rhscl/postgresql-10-rhel7",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "MYSQL_IMAGE",
-			Description: "Mysql image to use",
-			Value:       "registry.access.redhat.com/rhscl/mysql-57-rhel7:5.7",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "MEMCACHED_IMAGE",
-			Description: "Memcached image to use",
-			Value:       "registry.access.redhat.com/3scale-amp20/memcached",
-			Required:    true,
-		},
-		templatev1.Parameter{
-			Name:        "IMAGESTREAM_TAG_IMPORT_INSECURE",
-			Description: "Set to true if the server may bypass certificate verification or connect directly over HTTP during image import.",
-			Value:       "false",
-			Required:    true,
-		},
-	}
-	template.Parameters = append(template.Parameters, parameters...)
 }
