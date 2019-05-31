@@ -11,7 +11,6 @@ import (
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/product"
 
-	routev1 "github.com/openshift/api/route/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/3scale/3scale-operator/pkg/3scale/amp/component"
@@ -80,14 +79,12 @@ func TestFullHappyPath(t *testing.T) {
 
 	// Deploy APIManager resource
 	enableResourceRequirements := false
-	wildcardPolicy := string(routev1.WildcardPolicySubdomain)
 	apiManagerWildcardDomain := fmt.Sprintf("test1.%s.nip.io", clusterHost)
 	apimanager := &appsv1alpha1.APIManager{
 		Spec: appsv1alpha1.APIManagerSpec{
 			APIManagerCommonSpec: appsv1alpha1.APIManagerCommonSpec{
 				ProductVersion:              product.ProductUpstream,
 				WildcardDomain:              apiManagerWildcardDomain,
-				WildcardPolicy:              &wildcardPolicy,
 				ResourceRequirementsEnabled: &enableResourceRequirements,
 			},
 		},

@@ -26,8 +26,6 @@ type APIManagerSpec struct {
 	// +optional
 	Zync *ZyncSpec `json:"zync,omitempty"`
 	// +optional
-	WildcardRouter *WildcardRouterSpec `json:"wildcardRouter,omitempty"`
-	// +optional
 	HighAvailability *HighAvailabilitySpec `json:"highAvailability,omitempty"`
 }
 
@@ -96,8 +94,6 @@ type APIManagerCommonSpec struct {
 	AppLabel *string `json:"appLabel,omitempty"`
 	// +optional
 	TenantName *string `json:"tenantName,omitempty"`
-	// +optional
-	WildcardPolicy *string `json:"wildcardPolicy,omitempty"`
 	// +optional
 	ImageStreamTagImportInsecure *bool `json:"imageStreamTagImportInsecure,omitempty"`
 	// +optional
@@ -196,11 +192,6 @@ type ZyncSpec struct {
 	PostgreSQLImage *string `json:"postgreSQLImage,omitempty"`
 }
 
-type WildcardRouterSpec struct {
-	// +optional
-	Image *string `json:"image,omitempty"`
-}
-
 type HighAvailabilitySpec struct {
 	Enabled bool `json:"enabled,omitempty"`
 }
@@ -268,12 +259,6 @@ func (apimanager *APIManager) setAPIManagerCommonSpecDefaults() bool {
 	if spec.TenantName == nil {
 		defaultTenantName := "3scale"
 		spec.TenantName = &defaultTenantName
-		changed = true
-	}
-
-	if spec.WildcardPolicy == nil {
-		defaultWildcardPolicy := "None" //TODO should be a set of predefined values (a custom type enum-like to be used)
-		spec.WildcardPolicy = &defaultWildcardPolicy
 		changed = true
 	}
 

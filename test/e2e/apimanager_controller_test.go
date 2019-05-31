@@ -131,7 +131,6 @@ func waitForAllApiManagerStandardDeploymentConfigs(t *testing.T, kubeclient kube
 	deploymentConfigNames := []string{ // TODO gather this from constants/somewhere centralized
 		"apicast-production",
 		"apicast-staging",
-		"apicast-wildcard-router",
 		"backend-cron",
 		"backend-listener",
 		"backend-redis",
