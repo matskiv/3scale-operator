@@ -1881,11 +1881,6 @@ objects:
                 secretKeyRef:
                   key: SERVERS
                   name: system-memcache
-            - name: BACKEND_REDIS_URL
-              valueFrom:
-                secretKeyRef:
-                  key: REDIS_STORAGE_URL
-                  name: backend-redis
             - name: REDIS_URL
               valueFrom:
                 secretKeyRef:
@@ -1906,6 +1901,41 @@ objects:
                 secretKeyRef:
                   key: MESSAGE_BUS_NAMESPACE
                   name: system-redis
+            - name: REDIS_SENTINEL_HOSTS
+              valueFrom:
+                secretKeyRef:
+                  key: SENTINEL_HOSTS
+                  name: system-redis
+            - name: REDIS_SENTINEL_ROLE
+              valueFrom:
+                secretKeyRef:
+                  key: SENTINEL_ROLE
+                  name: system-redis
+            - name: MESSAGE_BUS_REDIS_SENTINEL_HOSTS
+              valueFrom:
+                secretKeyRef:
+                  key: MESSAGE_BUS_SENTINEL_HOSTS
+                  name: system-redis
+            - name: MESSAGE_BUS_REDIS_SENTINEL_ROLE
+              valueFrom:
+                secretKeyRef:
+                  key: MESSAGE_BUS_SENTINEL_ROLE
+                  name: system-redis
+            - name: BACKEND_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  key: REDIS_STORAGE_URL
+                  name: backend-redis
+            - name: BACKEND_REDIS_SENTINEL_HOSTS
+              valueFrom:
+                secretKeyRef:
+                  key: REDIS_STORAGE_SENTINEL_HOSTS
+                  name: backend-redis
+            - name: BACKEND_REDIS_SENTINEL_ROLE
+              valueFrom:
+                secretKeyRef:
+                  key: REDIS_STORAGE_SENTINEL_ROLE
+                  name: backend-redis
             - name: APICAST_BACKEND_ROOT_ENDPOINT
               valueFrom:
                 secretKeyRef:
@@ -2150,11 +2180,6 @@ objects:
               secretKeyRef:
                 key: SERVERS
                 name: system-memcache
-          - name: BACKEND_REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: REDIS_STORAGE_URL
-                name: backend-redis
           - name: REDIS_URL
             valueFrom:
               secretKeyRef:
@@ -2175,6 +2200,41 @@ objects:
               secretKeyRef:
                 key: MESSAGE_BUS_NAMESPACE
                 name: system-redis
+          - name: REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: SENTINEL_HOSTS
+                name: system-redis
+          - name: REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: SENTINEL_ROLE
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_SENTINEL_HOSTS
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_SENTINEL_ROLE
+                name: system-redis
+          - name: BACKEND_REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_URL
+                name: backend-redis
+          - name: BACKEND_REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_SENTINEL_HOSTS
+                name: backend-redis
+          - name: BACKEND_REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_SENTINEL_ROLE
+                name: backend-redis
           - name: APICAST_BACKEND_ROOT_ENDPOINT
             valueFrom:
               secretKeyRef:
@@ -2435,11 +2495,6 @@ objects:
               secretKeyRef:
                 key: SERVERS
                 name: system-memcache
-          - name: BACKEND_REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: REDIS_STORAGE_URL
-                name: backend-redis
           - name: REDIS_URL
             valueFrom:
               secretKeyRef:
@@ -2460,6 +2515,41 @@ objects:
               secretKeyRef:
                 key: MESSAGE_BUS_NAMESPACE
                 name: system-redis
+          - name: REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: SENTINEL_HOSTS
+                name: system-redis
+          - name: REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: SENTINEL_ROLE
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_SENTINEL_HOSTS
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_SENTINEL_ROLE
+                name: system-redis
+          - name: BACKEND_REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_URL
+                name: backend-redis
+          - name: BACKEND_REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_SENTINEL_HOSTS
+                name: backend-redis
+          - name: BACKEND_REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_SENTINEL_ROLE
+                name: backend-redis
           - name: APICAST_BACKEND_ROOT_ENDPOINT
             valueFrom:
               secretKeyRef:
@@ -2719,11 +2809,6 @@ objects:
               secretKeyRef:
                 key: SERVERS
                 name: system-memcache
-          - name: BACKEND_REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: REDIS_STORAGE_URL
-                name: backend-redis
           - name: REDIS_URL
             valueFrom:
               secretKeyRef:
@@ -2744,6 +2829,41 @@ objects:
               secretKeyRef:
                 key: MESSAGE_BUS_NAMESPACE
                 name: system-redis
+          - name: REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: SENTINEL_HOSTS
+                name: system-redis
+          - name: REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: SENTINEL_ROLE
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_SENTINEL_HOSTS
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_SENTINEL_ROLE
+                name: system-redis
+          - name: BACKEND_REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_URL
+                name: backend-redis
+          - name: BACKEND_REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_SENTINEL_HOSTS
+                name: backend-redis
+          - name: BACKEND_REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_SENTINEL_ROLE
+                name: backend-redis
           - name: APICAST_BACKEND_ROOT_ENDPOINT
             valueFrom:
               secretKeyRef:
@@ -3062,11 +3182,6 @@ objects:
               secretKeyRef:
                 key: SERVERS
                 name: system-memcache
-          - name: BACKEND_REDIS_URL
-            valueFrom:
-              secretKeyRef:
-                key: REDIS_STORAGE_URL
-                name: backend-redis
           - name: REDIS_URL
             valueFrom:
               secretKeyRef:
@@ -3087,6 +3202,41 @@ objects:
               secretKeyRef:
                 key: MESSAGE_BUS_NAMESPACE
                 name: system-redis
+          - name: REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: SENTINEL_HOSTS
+                name: system-redis
+          - name: REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: SENTINEL_ROLE
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_SENTINEL_HOSTS
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_SENTINEL_ROLE
+                name: system-redis
+          - name: BACKEND_REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_URL
+                name: backend-redis
+          - name: BACKEND_REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_SENTINEL_HOSTS
+                name: backend-redis
+          - name: BACKEND_REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_STORAGE_SENTINEL_ROLE
+                name: backend-redis
           - name: APICAST_BACKEND_ROOT_ENDPOINT
             valueFrom:
               secretKeyRef:
@@ -3194,8 +3344,6 @@ objects:
             --fail --head http://system-master:3000/status; do sleep $SLEEP_SECONDS;
             done"
           env:
-          - name: SLEEP_SECONDS
-            value: "1"
           - name: REDIS_URL
             valueFrom:
               secretKeyRef:
@@ -3216,6 +3364,28 @@ objects:
               secretKeyRef:
                 key: MESSAGE_BUS_NAMESPACE
                 name: system-redis
+          - name: REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: SENTINEL_HOSTS
+                name: system-redis
+          - name: REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: SENTINEL_ROLE
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_SENTINEL_HOSTS
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_SENTINEL_ROLE
+                name: system-redis
+          - name: SLEEP_SECONDS
+            value: "1"
           image: amp-system:latest
           name: check-svc
           resources: {}
@@ -3329,6 +3499,26 @@ objects:
               secretKeyRef:
                 key: MESSAGE_BUS_NAMESPACE
                 name: system-redis
+          - name: REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: SENTINEL_HOSTS
+                name: system-redis
+          - name: REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: SENTINEL_ROLE
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_SENTINEL_HOSTS
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_SENTINEL_HOSTS
+                name: system-redis
+          - name: MESSAGE_BUS_REDIS_SENTINEL_ROLE
+            valueFrom:
+              secretKeyRef:
+                key: MESSAGE_BUS_SENTINEL_ROLE
+                name: system-redis
           image: amp-system:latest
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -3398,8 +3588,12 @@ objects:
     name: system-redis
   stringData:
     MESSAGE_BUS_NAMESPACE: ${SYSTEM_MESSAGE_BUS_REDIS_NAMESPACE}
+    MESSAGE_BUS_SENTINEL_HOSTS: ""
+    MESSAGE_BUS_SENTINEL_ROLE: ""
     MESSAGE_BUS_URL: ${SYSTEM_MESSAGE_BUS_REDIS_URL}
     NAMESPACE: ${SYSTEM_REDIS_NAMESPACE}
+    SENTINEL_HOSTS: ""
+    SENTINEL_ROLE: ""
     URL: ${SYSTEM_REDIS_URL}
   type: Opaque
 - apiVersion: v1
