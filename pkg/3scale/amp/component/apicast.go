@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	appsv1 "github.com/openshift/api/apps/v1"
-	routev1 "github.com/openshift/api/route/v1"
 	templatev1 "github.com/openshift/api/template/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -125,8 +124,6 @@ func (apicast *Apicast) buildObjects() []runtime.RawExtension {
 	apicastProductionDeploymentConfig := apicast.buildApicastProductionDeploymentConfig()
 	apicastStagingService := apicast.buildApicastStagingService()
 	apicastProductionService := apicast.buildApicastProductionService()
-	apicastStagingRoute := apicast.buildApicastStagingRoute()
-	apicastProductionRoute := apicast.buildApicastProductionRoute()
 	apicastEnvConfigMap := apicast.buildApicastEnvConfigMap()
 
 	objects := []runtime.RawExtension{
@@ -134,37 +131,9 @@ func (apicast *Apicast) buildObjects() []runtime.RawExtension {
 		runtime.RawExtension{Object: apicastProductionDeploymentConfig},
 		runtime.RawExtension{Object: apicastStagingService},
 		runtime.RawExtension{Object: apicastProductionService},
-		runtime.RawExtension{Object: apicastStagingRoute},
-		runtime.RawExtension{Object: apicastProductionRoute},
 		runtime.RawExtension{Object: apicastEnvConfigMap},
 	}
 	return objects
-}
-
-func (apicast *Apicast) buildApicastStagingRoute() *routev1.Route {
-	return &routev1.Route{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Route",
-			APIVersion: "route.openshift.io/v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "api-apicast-staging",
-			Labels: map[string]string{"app": apicast.Options.appLabel, "threescale_component": "apicast", "threescale_component_element": "staging"},
-		},
-		Spec: routev1.RouteSpec{
-			Host: "api-" + apicast.Options.tenantName + "-apicast-staging." + apicast.Options.wildcardDomain,
-			To: routev1.RouteTargetReference{
-				Kind: "Service",
-				Name: "apicast-staging",
-			},
-			Port: &routev1.RoutePort{
-				TargetPort: intstr.FromString("gateway"),
-			},
-			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationEdge,
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
-		},
-	}
 }
 
 func (apicast *Apicast) buildApicastStagingService() *v1.Service {
@@ -197,32 +166,6 @@ func (apicast *Apicast) buildApicastStagingService() *v1.Service {
 				},
 			},
 			Selector: map[string]string{"deploymentConfig": "apicast-staging"},
-		},
-	}
-}
-
-func (apicast *Apicast) buildApicastProductionRoute() *routev1.Route {
-	return &routev1.Route{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Route",
-			APIVersion: "route.openshift.io/v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "api-apicast-production",
-			Labels: map[string]string{"app": apicast.Options.appLabel, "threescale_component": "apicast", "threescale_component_element": "production"},
-		},
-		Spec: routev1.RouteSpec{
-			Host: "api-" + apicast.Options.tenantName + "-apicast-production." + apicast.Options.wildcardDomain,
-			To: routev1.RouteTargetReference{
-				Kind: "Service",
-				Name: "apicast-production",
-			},
-			Port: &routev1.RoutePort{
-				TargetPort: intstr.FromString("gateway"),
-			},
-			TLS: &routev1.TLSConfig{
-				Termination:                   routev1.TLSTerminationEdge,
-				InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
 		},
 	}
 }
